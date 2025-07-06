@@ -17,6 +17,10 @@
 
 #include <string.h>
 
+#ifdef GGML_OPENCL_USE_CLML
+#include "clml/clml.h"
+#endif
+
 #include <cstddef>
 #include <cstdint>
 #include <atomic>
@@ -1742,6 +1746,14 @@ static ggml_backend_opencl_context * ggml_cl2_init(ggml_backend_dev_t dev) {
         GGML_LOG_ERROR("ggml_opencl: device does not support FP16\n");
         return nullptr;
     }
+    #ifdef GGML_OPENCL_USE_CLML
+        // Check if CLML extension is supported
+        backend_ctx->clml_supported = strstr(ext_buffer, "cl_qcom_ml_ops") != NULL;
+        GGML_LOG_INFO("ggml_opencl: CLML extension support: %s\n", backend_ctx->clml_supported ? "true" : "false");
+        ggml_clml_query_version();
+        ggml_clml_version clml_version = ggml_clml_version_get();
+        std::cout<<"clml version : "<<clml_version.major<<"."<<clml_version.minor<<std::endl;
+    #endif  
 
     // If OpenCL 3.0 is supported, then check for cl_khr_subgroups, which becomes
     // optional in OpenCL 3.0 (cl_khr_subgroup is mandatory in OpenCL 2.x)
